@@ -11,6 +11,10 @@ type alias Coords =
     }
 
 
+initCoords =
+    { x = 0, y = 0 }
+
+
 {-| -}
 localCoords : Json.Decoder Coords
 localCoords =

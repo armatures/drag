@@ -2,11 +2,12 @@ module Main exposing (..)
 
 import Browser
 import Browser.Events exposing (onMouseUp)
-import Element exposing (centerY, el, fill, height, inFront, moveDown, moveRight, none, padding, px, rgb, text, width)
+import Debug exposing (todo)
+import Element exposing (centerY, el, explain, fill, height, inFront, moveDown, moveRight, none, padding, rgb, text, width)
 import Element.Background exposing (color)
 import Html exposing (Html)
 import Json.Decode exposing (succeed)
-import Mouse exposing (Coords, onMouseCoords, onMouseDownCoords)
+import Mouse exposing (Coords, initCoords, onMouseCoords, onMouseDownCoords)
 
 
 
@@ -14,14 +15,14 @@ import Mouse exposing (Coords, onMouseCoords, onMouseDownCoords)
 
 
 type alias Model =
-    { cardPosition : Float
+    { cardPosition : Coords
     , startDragCoords : Maybe Coords
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { cardPosition = 0
+    ( { cardPosition = initCoords
       , startDragCoords = Nothing
       }
     , Cmd.none
@@ -58,16 +59,22 @@ update msg model =
         MouseMove moveRecord ->
             ( { model
                 | cardPosition = cardPosition model.cardPosition moveRecord
-                , startDragCoords = Just moveRecord.current
+                , startDragCoords =
+                    Maybe.map2
+                        (\_ newMoving -> newMoving)
+                        --don't move if the mouse has already been released (events arrive unordered)
+                        model.startDragCoords
+                        (Just moveRecord.current)
               }
             , Cmd.none
             )
 
 
-cardPosition : Float -> MouseRecord -> Float
+cardPosition : Coords -> MouseRecord -> Coords
 cardPosition previous { start, current } =
-    previous
-        + toFloat (current.x - start.x)
+    { x = previous.x + (current.x - start.x)
+    , y = previous.y + (current.y - start.y)
+    }
 
 
 
@@ -76,21 +83,31 @@ cardPosition previous { start, current } =
 
 view : Model -> Html Msg
 view model =
-    Element.layout [] <|
-        Element.column [ width fill, height fill ]
-            [ el (cardStyles model.startDragCoords model.cardPosition) (text "click me")
-            , Element.el
-                [ width fill, centerY, color (rgb 0.8 0.4 0.4), padding 30 ]
-                (Element.text "hello from elm-ui")
-            ]
+    Element.layout
+        [ width fill
+        , height fill
+        , explain todo
+        , inFront <| helloBanner
+        , inFront <| draggableCard model
+        ]
+        none
 
 
-cardStyles startDragCoords x =
-    [ padding 100, moveRight x ]
+helloBanner =
+    Element.el
+        [ width fill, centerY, color (rgb 0.8 0.4 0.4), padding 30 ]
+        (Element.text "hello from elm-ui")
+
+
+draggableCard model =
+    el (cardStyles model.startDragCoords model.cardPosition) (text "drag me")
+
+
+cardStyles startDragCoords { x, y } =
+    [ padding 100, moveRight (toFloat x), moveDown (toFloat y) ]
         ++ (case startDragCoords of
                 Just coords ->
                     [ color (rgb 0.8 0.8 0.4)
-                    , onMouseCoords (\c -> MouseMove { start = coords, current = c })
                     ]
 
                 Nothing ->
