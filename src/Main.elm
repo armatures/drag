@@ -1,10 +1,12 @@
 module Main exposing (..)
 
 import Browser
-import Element exposing (centerY, el, fill, height, moveRight, padding, rgb, spacing, text, width)
+import Browser.Events exposing (onMouseUp)
+import Element exposing (centerY, el, fill, height, inFront, moveDown, moveRight, none, padding, px, rgb, text, width)
 import Element.Background exposing (color)
-import Element.Events exposing (onMouseDown, onMouseMove, onMouseUp)
 import Html exposing (Html)
+import Json.Decode exposing (succeed)
+import Mouse exposing (Coords, onMouseCoords, onMouseDownCoords)
 
 
 
@@ -12,15 +14,15 @@ import Html exposing (Html)
 
 
 type alias Model =
-    { isMouseDown : Bool
-    , cardPosition : Float
+    { cardPosition : Float
+    , startDragCoords : Maybe Coords
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { isMouseDown = False
-      , cardPosition = 0
+    ( { cardPosition = 0
+      , startDragCoords = Nothing
       }
     , Cmd.none
     )
@@ -33,8 +35,12 @@ init =
 type Msg
     = NoOp
     | MouseUp
-    | MouseDown
-    | MouseMove
+    | MouseDown Coords
+    | MouseMove MouseRecord
+
+
+type alias MouseRecord =
+    { start : Coords, current : Coords }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -43,14 +49,25 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
-        MouseDown ->
-            ( { model | isMouseDown = True }, Cmd.none )
+        MouseDown coords ->
+            ( { model | startDragCoords = Just coords }, Cmd.none )
 
         MouseUp ->
-            ( { model | isMouseDown = False }, Cmd.none )
+            ( { model | startDragCoords = Nothing }, Cmd.none )
 
-        MouseMove ->
-            ( { model | isMouseDown = False }, Cmd.none )
+        MouseMove moveRecord ->
+            ( { model
+                | cardPosition = cardPosition model.cardPosition moveRecord
+                , startDragCoords = Just moveRecord.current
+              }
+            , Cmd.none
+            )
+
+
+cardPosition : Float -> MouseRecord -> Float
+cardPosition previous { start, current } =
+    previous
+        + toFloat (current.x - start.x)
 
 
 
@@ -61,23 +78,23 @@ view : Model -> Html Msg
 view model =
     Element.layout [] <|
         Element.column [ width fill, height fill ]
-            [ el (cardStyles model.isMouseDown model.cardPosition) (text "click me")
+            [ el (cardStyles model.startDragCoords model.cardPosition) (text "click me")
             , Element.el
                 [ width fill, centerY, color (rgb 0.8 0.4 0.4), padding 30 ]
                 (Element.text "hello from elm-ui")
             ]
 
 
-cardStyles isMouseDown x =
+cardStyles startDragCoords x =
     [ padding 100, moveRight x ]
-        ++ (if isMouseDown then
-                [ color (rgb 0.8 0.8 0.4)
-                , onMouseUp MouseUp
-                , onMouseMove MouseMove -- probably need a custom mouseMove to listen for x,y changes
-                ]
+        ++ (case startDragCoords of
+                Just coords ->
+                    [ color (rgb 0.8 0.8 0.4)
+                    , onMouseCoords (\c -> MouseMove { start = coords, current = c })
+                    ]
 
-            else
-                [ color (rgb 0.8 0.4 0.8), onMouseDown MouseDown ]
+                Nothing ->
+                    [ color (rgb 0.8 0.4 0.8), onMouseDownCoords MouseDown ]
            )
 
 
@@ -91,5 +108,5 @@ main =
         { view = view
         , init = \_ -> init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = always (onMouseUp (succeed MouseUp))
         }
