@@ -1,5 +1,6 @@
 module Mouse exposing (..)
 
+import Browser.Events exposing (onMouseMove)
 import Element exposing (Attribute, htmlAttribute)
 import Html.Events exposing (on)
 import Json.Decode as Json
@@ -51,3 +52,8 @@ onMouseDownCoords msg =
 onMouseCoords : (Coords -> msg) -> Attribute msg
 onMouseCoords msg =
     htmlAttribute <| on "mousemove" (Json.map msg pageCoords)
+
+
+subMouseMoveCoords : (Coords -> msg) -> Sub msg
+subMouseMoveCoords f =
+    onMouseMove (Json.map f pageCoords)

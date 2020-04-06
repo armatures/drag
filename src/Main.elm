@@ -1,13 +1,13 @@
 module Main exposing (..)
 
 import Browser
-import Browser.Events exposing (onMouseUp)
+import Browser.Events exposing (onMouseMove, onMouseUp)
 import Debug exposing (todo)
 import Element exposing (centerY, el, explain, fill, height, inFront, moveDown, moveRight, none, padding, rgb, text, width)
 import Element.Background exposing (color)
 import Html exposing (Html)
-import Json.Decode exposing (succeed)
-import Mouse exposing (Coords, initCoords, onMouseCoords, onMouseDownCoords)
+import Json.Decode as Json exposing (succeed)
+import Mouse exposing (Coords, initCoords, onMouseCoords, onMouseDownCoords, subMouseMoveCoords)
 
 
 
@@ -125,5 +125,23 @@ main =
         { view = view
         , init = \_ -> init
         , update = update
-        , subscriptions = always (onMouseUp (succeed MouseUp))
+        , subscriptions = subscriptions
         }
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    let
+        f : Coords -> Coords -> Msg
+        f coords c =
+            MouseMove { start = coords, current = c }
+    in
+    onMouseUp (succeed MouseUp)
+        :: (case model.startDragCoords of
+                Just coords ->
+                    [ subMouseMoveCoords (f coords) ]
+
+                Nothing ->
+                    []
+           )
+        |> Sub.batch
