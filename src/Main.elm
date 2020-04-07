@@ -1,13 +1,15 @@
 module Main exposing (..)
 
+import AssocList as Dict exposing (Dict)
 import Browser
-import Browser.Events exposing (onMouseMove, onMouseUp)
+import Browser.Events exposing (onMouseUp)
 import Debug exposing (todo)
-import Element exposing (centerY, el, explain, fill, height, inFront, moveDown, moveRight, none, padding, rgb, text, width)
+import Element exposing (Element, centerY, el, explain, fill, height, inFront, moveDown, moveRight, none, padding, rgb, text, width)
 import Element.Background exposing (color)
 import Html exposing (Html)
-import Json.Decode as Json exposing (succeed)
-import Mouse exposing (Coords, initCoords, onMouseCoords, onMouseDownCoords, subMouseMoveCoords)
+import Id exposing (Id)
+import Json.Decode exposing (succeed)
+import Mouse exposing (Coords, initCoords, onMouseDownCoords, subMouseMoveCoords)
 
 
 
@@ -15,14 +17,35 @@ import Mouse exposing (Coords, initCoords, onMouseCoords, onMouseDownCoords, sub
 
 
 type alias Model =
-    { cardPosition : Coords
-    , startDragCoords : Maybe Coords
+    { cards : Dict Id Card
+    , startDragCoords : Maybe Card
     }
+
+
+type alias Card =
+    { id : Id, coords : Coords }
+
+
+mapCoords f card =
+    { card | coords = f card.coords }
+
+
+cards : Int -> Dict Id Card
+cards count =
+    let
+        ids =
+            List.range 1 count |> List.map Id.new
+    in
+    List.map2 Card
+        ids
+        (List.repeat count initCoords)
+        |> List.map2 Tuple.pair ids
+        |> Dict.fromList
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { cardPosition = initCoords
+    ( { cards = cards 3
       , startDragCoords = Nothing
       }
     , Cmd.none
@@ -36,12 +59,12 @@ init =
 type Msg
     = NoOp
     | MouseUp
-    | MouseDown Coords
+    | MouseDown Card
     | MouseMove MouseRecord
 
 
 type alias MouseRecord =
-    { start : Coords, current : Coords }
+    { start : Card, current : Coords }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -50,31 +73,41 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
-        MouseDown coords ->
-            ( { model | startDragCoords = Just coords }, Cmd.none )
+        MouseDown card ->
+            ( { model | startDragCoords = Just card }, Cmd.none )
 
         MouseUp ->
             ( { model | startDragCoords = Nothing }, Cmd.none )
 
         MouseMove moveRecord ->
             ( { model
-                | cardPosition = cardPosition model.cardPosition moveRecord
+                | cards = Dict.map (cardPosition moveRecord) model.cards
                 , startDragCoords =
                     Maybe.map2
                         (\_ newMoving -> newMoving)
                         --don't move if the mouse has already been released (events arrive unordered)
                         model.startDragCoords
                         (Just moveRecord.current)
+                        |> Maybe.map (Card moveRecord.start.id)
+
+                -- the "current" field doesn't have the id, but these must refer to the same record.
               }
             , Cmd.none
             )
 
 
-cardPosition : Coords -> MouseRecord -> Coords
-cardPosition previous { start, current } =
-    { x = previous.x + (current.x - start.x)
-    , y = previous.y + (current.y - start.y)
-    }
+cardPosition : MouseRecord -> Id -> Card -> Card
+cardPosition { start, current } id previous =
+    if id == start.id then
+        { id = id
+        , coords =
+            { x = previous.coords.x + (current.x - start.coords.x)
+            , y = previous.coords.y + (current.y - start.coords.y)
+            }
+        }
+
+    else
+        previous
 
 
 
@@ -83,13 +116,24 @@ cardPosition previous { start, current } =
 
 view : Model -> Html Msg
 view model =
+    let
+        cardList =
+            model.cards
+                |> Dict.toList
+                |> List.map Tuple.second
+
+        cardsAsAttributes =
+            List.map (draggableCard model.startDragCoords) cardList
+                |> List.map inFront
+    in
     Element.layout
-        [ width fill
-        , height fill
-        , explain todo
-        , inFront <| helloBanner
-        , inFront <| draggableCard model
-        ]
+        ([ width fill
+         , height fill
+         , explain todo
+         , inFront <| helloBanner
+         ]
+            ++ cardsAsAttributes
+        )
         none
 
 
@@ -99,19 +143,28 @@ helloBanner =
         (Element.text "hello from elm-ui")
 
 
-draggableCard model =
-    el (cardStyles model.startDragCoords model.cardPosition) (text "drag me")
+draggableCard : Maybe Card -> Card -> Element Msg
+draggableCard startDragCard card =
+    el (cardStyles startDragCard card) (text "drag me")
 
 
-cardStyles startDragCoords { x, y } =
-    [ padding 100, moveRight (toFloat x), moveDown (toFloat y) ]
-        ++ (case startDragCoords of
-                Just coords ->
-                    [ color (rgb 0.8 0.8 0.4)
-                    ]
+cardStyles startDragCard card =
+    let
+        undragged =
+            [ color (rgb 0.8 0.4 0.8), onMouseDownCoords (MouseDown << Card card.id) ]
+    in
+    [ padding 100, moveRight (toFloat card.coords.x), moveDown (toFloat card.coords.y) ]
+        ++ (case startDragCard of
+                Just draggingCard ->
+                    if draggingCard.id == card.id then
+                        [ color (rgb 0.8 0.8 0.4)
+                        ]
+
+                    else
+                        undragged
 
                 Nothing ->
-                    [ color (rgb 0.8 0.4 0.8), onMouseDownCoords MouseDown ]
+                    undragged
            )
 
 
@@ -132,14 +185,14 @@ main =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     let
-        f : Coords -> Coords -> Msg
+        f : Card -> Coords -> Msg
         f coords c =
             MouseMove { start = coords, current = c }
     in
     onMouseUp (succeed MouseUp)
         :: (case model.startDragCoords of
-                Just coords ->
-                    [ subMouseMoveCoords (f coords) ]
+                Just card ->
+                    [ subMouseMoveCoords (f card) ]
 
                 Nothing ->
                     []
