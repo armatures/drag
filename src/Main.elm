@@ -3,13 +3,14 @@ module Main exposing (..)
 import AssocList as Dict exposing (Dict)
 import Browser
 import Browser.Events exposing (onMouseUp)
+import Card exposing (Card, initCards)
 import Debug exposing (todo)
 import Element exposing (Element, centerY, el, explain, fill, height, inFront, moveDown, moveRight, none, padding, rgb, text, width)
 import Element.Background exposing (color)
 import Html exposing (Html)
 import Id exposing (Id)
 import Json.Decode exposing (succeed)
-import Mouse exposing (Coords, initCoords, onMouseDownCoords, subMouseMoveCoords)
+import Mouse exposing (Coords, onMouseDownCoords, subMouseMoveCoords)
 
 
 
@@ -22,30 +23,9 @@ type alias Model =
     }
 
 
-type alias Card =
-    { id : Id, coords : Coords }
-
-
-mapCoords f card =
-    { card | coords = f card.coords }
-
-
-cards : Int -> Dict Id Card
-cards count =
-    let
-        ids =
-            List.range 1 count |> List.map Id.new
-    in
-    List.map2 Card
-        ids
-        (List.repeat count initCoords)
-        |> List.map2 Tuple.pair ids
-        |> Dict.fromList
-
-
 init : ( Model, Cmd Msg )
 init =
-    ( { cards = cards 3
+    ( { cards = initCards 3
       , startDragCoords = Nothing
       }
     , Cmd.none
