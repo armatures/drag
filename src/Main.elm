@@ -6,6 +6,7 @@ import Browser.Events exposing (onMouseUp)
 import Card exposing (initCards)
 import Element exposing (Element, centerY, fill, height, inFront, none, padding, rgb, width)
 import Element.Background exposing (color)
+import Hand
 import Html exposing (Html)
 import Id exposing (Id)
 import Json.Decode exposing (succeed)
@@ -26,7 +27,7 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { cards = initCards 3
+    ( { cards = initCards 4
       , startDragCoords = Nothing
       }
     , Cmd.none
@@ -93,15 +94,16 @@ view model =
                 |> List.map Tuple.second
 
         cardsAsAttributes =
-            List.map (Card.view model.startDragCoords) cardList
+            List.map (Card.view model.startDragCoords) (List.take 2 cardList)
                 |> List.map inFront
     in
     Element.layout
         ([ width fill
          , height fill
-         , inFront <| helloBanner
+         , inFront helloBanner
          ]
             ++ cardsAsAttributes
+            ++ [ inFront (Hand.view model.startDragCoords (Hand.fromList (List.drop 2 cardList))) ]
         )
         none
 
