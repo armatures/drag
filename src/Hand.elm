@@ -22,9 +22,26 @@ draw card (Hand hand) =
 
 view : Maybe Card -> Hand -> Element Msg
 view draggingCard (Hand hand) =
+    let
+        rotateCard i c =
+            if isDragging draggingCard c then
+                identity
+
+            else
+                el [ cardAngle i (List.length hand) ]
+    in
     el [ alignBottom, centerX ] <|
         row [] <|
-            List.indexedMap (\i c -> Card.view draggingCard c |> el [ cardAngle i (List.length hand) ]) hand
+            List.indexedMap (\i c -> rotateCard i c <| Card.view draggingCard c) hand
+
+
+isDragging draggingCard card =
+    case draggingCard of
+        Just c ->
+            card.id == c.id
+
+        Nothing ->
+            False
 
 
 type alias Index =
