@@ -7,6 +7,7 @@ import Card exposing (Card, initCards)
 import Debug exposing (todo)
 import Element exposing (Element, centerY, el, explain, fill, height, inFront, moveDown, moveRight, none, padding, rgb, text, width)
 import Element.Background exposing (color)
+import Element.Border as Border exposing (shadow)
 import Html exposing (Html)
 import Id exposing (Id)
 import Json.Decode exposing (succeed)
@@ -138,12 +139,17 @@ cardStyles startDragCard card =
                 Nothing ->
                     False
     in
-    [ padding 100, moveRight (toFloat card.coords.x), moveDown (toFloat card.coords.y) ]
+    [ padding 100, moveRight (toFloat card.coords.x), moveDown (toFloat card.coords.y), Border.rounded 15 ]
         ++ (if isDragging then
-                [ color (rgb 0.8 0.8 0.4) ]
+                [ color (rgb 0.8 0.8 0.4)
+                , shadow { offset = ( 0, 0 ), size = 0.0001, blur = 10, color = rgb 0.0 0.0 0.0 }
+                ]
 
             else
-                [ color (rgb 0.8 0.4 0.8), onMouseDownCoords (MouseDown << Card card.id) ]
+                [ color (rgb 0.8 0.4 0.8)
+                , onMouseDownCoords (MouseDown << Card card.id)
+                , shadow { offset = ( 0, 0 ), size = 0.000001, blur = 0.5, color = rgb 0.0 0.0 0.0 }
+                ]
            )
 
 
