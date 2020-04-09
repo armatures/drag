@@ -130,21 +130,20 @@ draggableCard startDragCard card =
 
 cardStyles startDragCard card =
     let
-        undragged =
-            [ color (rgb 0.8 0.4 0.8), onMouseDownCoords (MouseDown << Card card.id) ]
-    in
-    [ padding 100, moveRight (toFloat card.coords.x), moveDown (toFloat card.coords.y) ]
-        ++ (case startDragCard of
+        isDragging =
+            case startDragCard of
                 Just draggingCard ->
-                    if draggingCard.id == card.id then
-                        [ color (rgb 0.8 0.8 0.4)
-                        ]
-
-                    else
-                        undragged
+                    draggingCard.id == card.id
 
                 Nothing ->
-                    undragged
+                    False
+    in
+    [ padding 100, moveRight (toFloat card.coords.x), moveDown (toFloat card.coords.y) ]
+        ++ (if isDragging then
+                [ color (rgb 0.8 0.8 0.4) ]
+
+            else
+                [ color (rgb 0.8 0.4 0.8), onMouseDownCoords (MouseDown << Card card.id) ]
            )
 
 
