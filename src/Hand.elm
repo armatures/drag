@@ -1,7 +1,7 @@
 module Hand exposing (..)
 
 import Card
-import Element exposing (Attribute, Element, alignBottom, centerX, el, none, rotate, row)
+import Element exposing (Attribute, Element, alignBottom, centerX, el, rotate, row)
 import Model exposing (Card)
 import Msg exposing (Msg)
 

@@ -5,7 +5,16 @@ import Mouse exposing (Coords)
 
 
 type alias Card =
-    { id : Id, coords : Coords }
+    { id : Id, location : Location }
+
+
+type Location
+    = Table Coords
+    | InHand
+
+
+mapLocation f card =
+    { card | location = f card.location }
 
 
 mapCoords f card =

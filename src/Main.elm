@@ -3,14 +3,14 @@ module Main exposing (..)
 import AssocList as Dict exposing (Dict)
 import Browser
 import Browser.Events exposing (onMouseUp)
-import Card exposing (initCards)
+import Card exposing (cardSize, initCards)
 import Element exposing (Element, centerY, fill, height, inFront, none, padding, rgb, width)
 import Element.Background exposing (color)
 import Hand
 import Html exposing (Html)
 import Id exposing (Id)
 import Json.Decode exposing (succeed)
-import Model exposing (Card)
+import Model exposing (Card, Location(..), mapLocation)
 import Mouse exposing (Coords, subMouseMoveCoords)
 import Msg exposing (DragRecord, Msg(..))
 
@@ -45,7 +45,21 @@ update msg model =
             ( model, Cmd.none )
 
         MouseDown card ->
-            ( { model | draggingCard = Just card }, Cmd.none )
+            ( { model
+                | draggingCard =
+                    Just
+                        (mapLocation
+                            (always <|
+                                Table
+                                    { x = cardSize // 2
+                                    , y = cardSize // 2
+                                    }
+                            )
+                            card
+                        )
+              }
+            , Cmd.none
+            )
 
         MouseUp ->
             ( { model | draggingCard = Nothing }, Cmd.none )
@@ -59,7 +73,7 @@ update msg model =
                         --don't move if the mouse has already been released (events arrive unordered)
                         model.draggingCard
                         (Just moveRecord.current)
-                        |> Maybe.map (Card moveRecord.start.id)
+                        |> Maybe.map (Card moveRecord.startId << Table)
 
                 -- the "current" field doesn't have the id, but these must refer to the same record.
               }
@@ -67,15 +81,31 @@ update msg model =
             )
 
 
+{-| this won't work... Right now all the cards rely on starting at the origin, and I'm not sure how to
+get the appropriate offset from the origin when cards are coming from their hand.
+we need to act differently when transitioning hand cards onto the table.
+mouse coordinates into pageCoordinates is just the mouse position listener we have
+-}
 cardPosition : DragRecord -> Id -> Card -> Card
-cardPosition { start, current } id previous =
-    if id == start.id then
-        { id = id
-        , coords =
-            { x = previous.coords.x + (current.x - start.coords.x)
-            , y = previous.coords.y + (current.y - start.coords.y)
-            }
-        }
+cardPosition { startId, startCoords, current } id previous =
+    if id == startId then
+        mapLocation
+            (\location ->
+                case location of
+                    --could probably dry these up
+                    Table previousLocation ->
+                        Table
+                            { x = previousLocation.x + (current.x - startCoords.x)
+                            , y = previousLocation.y + (current.y - startCoords.y)
+                            }
+
+                    InHand ->
+                        Table
+                            { x = current.x - startCoords.x
+                            , y = current.y - startCoords.y
+                            }
+            )
+            previous
 
     else
         previous
@@ -94,7 +124,7 @@ view model =
                 |> List.map Tuple.second
 
         cardsAsAttributes =
-            List.map (Card.view model.draggingCard) (List.take 2 cardList)
+            List.map (Card.view model.draggingCard) (List.filter (.location >> (==) InHand >> not) cardList)
                 |> List.map inFront
     in
     Element.layout
@@ -103,7 +133,11 @@ view model =
          , inFront helloBanner
          ]
             ++ cardsAsAttributes
-            ++ [ inFront (Hand.view model.draggingCard (Hand.fromList (List.drop 2 cardList))) ]
+            ++ [ inFront
+                    (Hand.view model.draggingCard
+                        (Hand.fromList (List.filter (.location >> (==) InHand) cardList))
+                    )
+               ]
         )
         none
 
@@ -132,8 +166,18 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     let
         f : Card -> Coords -> Msg
-        f coords c =
-            MouseMove { start = coords, current = c }
+        f c coords =
+            MouseMove
+                { startId = c.id
+                , startCoords =
+                    case c.location of
+                        Table tableCoords ->
+                            tableCoords
+
+                        InHand ->
+                            { x = 0, y = 0 }
+                , current = coords
+                }
     in
     onMouseUp (succeed MouseUp)
         :: (case model.draggingCard of

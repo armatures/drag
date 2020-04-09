@@ -1,5 +1,6 @@
 module Msg exposing (..)
 
+import Id exposing (Id)
 import Model exposing (Card)
 import Mouse exposing (Coords)
 
@@ -12,4 +13,4 @@ type Msg
 
 
 type alias DragRecord =
-    { start : Card, current : Coords }
+    { startId : Id, startCoords : Coords, current : Coords }
