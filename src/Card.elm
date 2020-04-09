@@ -23,8 +23,8 @@ initCards count =
         |> Dict.fromList
 
 
-draggableCard : Maybe Card -> Card -> Element Msg
-draggableCard startDragCard card =
+view : Maybe Card -> Card -> Element Msg
+view startDragCard card =
     el (cardStyles startDragCard card) (text "drag me")
 
 

@@ -3,7 +3,7 @@ module Main exposing (..)
 import AssocList as Dict exposing (Dict)
 import Browser
 import Browser.Events exposing (onMouseUp)
-import Card exposing (draggableCard, initCards)
+import Card exposing (initCards)
 import Element exposing (Element, centerY, fill, height, inFront, none, padding, rgb, width)
 import Element.Background exposing (color)
 import Html exposing (Html)
@@ -93,7 +93,7 @@ view model =
                 |> List.map Tuple.second
 
         cardsAsAttributes =
-            List.map (draggableCard model.startDragCoords) cardList
+            List.map (Card.view model.startDragCoords) cardList
                 |> List.map inFront
     in
     Element.layout
