@@ -28,6 +28,7 @@ view startDragCard card =
     el (cardStyles startDragCard card) (text "drag me")
 
 
+cardStyles : Maybe Card -> Card -> List (Element.Attribute Msg)
 cardStyles startDragCard card =
     let
         isDragging =

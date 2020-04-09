@@ -21,14 +21,14 @@ import Msg exposing (DragRecord, Msg(..))
 
 type alias Model =
     { cards : Dict Id Card
-    , startDragCoords : Maybe Card
+    , draggingCard : Maybe Card
     }
 
 
 init : ( Model, Cmd Msg )
 init =
     ( { cards = initCards 4
-      , startDragCoords = Nothing
+      , draggingCard = Nothing
       }
     , Cmd.none
     )
@@ -45,19 +45,19 @@ update msg model =
             ( model, Cmd.none )
 
         MouseDown card ->
-            ( { model | startDragCoords = Just card }, Cmd.none )
+            ( { model | draggingCard = Just card }, Cmd.none )
 
         MouseUp ->
-            ( { model | startDragCoords = Nothing }, Cmd.none )
+            ( { model | draggingCard = Nothing }, Cmd.none )
 
         MouseMove moveRecord ->
             ( { model
                 | cards = Dict.map (cardPosition moveRecord) model.cards
-                , startDragCoords =
+                , draggingCard =
                     Maybe.map2
                         (\_ newMoving -> newMoving)
                         --don't move if the mouse has already been released (events arrive unordered)
-                        model.startDragCoords
+                        model.draggingCard
                         (Just moveRecord.current)
                         |> Maybe.map (Card moveRecord.start.id)
 
@@ -94,7 +94,7 @@ view model =
                 |> List.map Tuple.second
 
         cardsAsAttributes =
-            List.map (Card.view model.startDragCoords) (List.take 2 cardList)
+            List.map (Card.view model.draggingCard) (List.take 2 cardList)
                 |> List.map inFront
     in
     Element.layout
@@ -103,7 +103,7 @@ view model =
          , inFront helloBanner
          ]
             ++ cardsAsAttributes
-            ++ [ inFront (Hand.view model.startDragCoords (Hand.fromList (List.drop 2 cardList))) ]
+            ++ [ inFront (Hand.view model.draggingCard (Hand.fromList (List.drop 2 cardList))) ]
         )
         none
 
@@ -136,7 +136,7 @@ subscriptions model =
             MouseMove { start = coords, current = c }
     in
     onMouseUp (succeed MouseUp)
-        :: (case model.startDragCoords of
+        :: (case model.draggingCard of
                 Just card ->
                     [ subMouseMoveCoords (f card) ]
 
