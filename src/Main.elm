@@ -40,10 +40,10 @@ type Msg
     = NoOp
     | MouseUp
     | MouseDown Card
-    | MouseMove MouseRecord
+    | MouseMove DragRecord
 
 
-type alias MouseRecord =
+type alias DragRecord =
     { start : Card, current : Coords }
 
 
@@ -76,7 +76,7 @@ update msg model =
             )
 
 
-cardPosition : MouseRecord -> Id -> Card -> Card
+cardPosition : DragRecord -> Id -> Card -> Card
 cardPosition { start, current } id previous =
     if id == start.id then
         { id = id
