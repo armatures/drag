@@ -10,7 +10,7 @@ import Hand
 import Html exposing (Html)
 import Id exposing (Id)
 import Json.Decode exposing (succeed)
-import Model exposing (Card, Location(..), mapLocation)
+import Model exposing (Card, Location(..), cardsInHand, mapLocation, tableCards)
 import Mouse exposing (Coords, subMouseMoveCoords)
 import Msg exposing (DragRecord, Msg(..))
 
@@ -124,7 +124,7 @@ view model =
                 |> List.map Tuple.second
 
         cardsAsAttributes =
-            List.map (Card.view model.draggingCard) (List.filter (.location >> (==) InHand >> not) cardList)
+            List.map (Card.view model.draggingCard) (tableCards cardList)
                 |> List.map inFront
     in
     Element.layout
@@ -135,7 +135,7 @@ view model =
             ++ cardsAsAttributes
             ++ [ inFront
                     (Hand.view model.draggingCard
-                        (Hand.fromList (List.filter (.location >> (==) InHand) cardList))
+                        (Hand.fromList (cardsInHand cardList))
                     )
                ]
         )
