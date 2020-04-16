@@ -1,6 +1,5 @@
 module Card exposing (..)
 
-import AssocList as Dict exposing (Dict)
 import Element exposing (Element, centerX, centerY, el, height, inFront, moveDown, moveRight, none, px, rgb, text, width)
 import Element.Background exposing (color)
 import Element.Border as Border exposing (shadow)
@@ -21,7 +20,7 @@ mouseGrabPoint coords =
     }
 
 
-initCards : Int -> Dict Id Card
+initCards : Int -> List Card
 initCards count =
     let
         ids =
@@ -41,8 +40,6 @@ initCards count =
     List.map2 Card
         ids
         locations
-        |> List.map2 Tuple.pair ids
-        |> Dict.fromList
 
 
 view : Maybe Card -> Card -> Element Msg

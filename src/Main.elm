@@ -1,6 +1,5 @@
 module Main exposing (..)
 
-import AssocList as Dict exposing (Dict)
 import Browser
 import Browser.Events exposing (onMouseUp)
 import Card exposing (cardSize, initCards)
@@ -8,7 +7,6 @@ import Element exposing (Element, centerY, fill, height, inFront, none, padding,
 import Element.Background exposing (color)
 import Hand
 import Html exposing (Html)
-import Id exposing (Id)
 import Json.Decode exposing (succeed)
 import Model exposing (Card, Location(..), cardsInHand, mapLocation, tableCards)
 import Mouse exposing (Coords, subMouseMoveCoords)
@@ -20,7 +18,7 @@ import Msg exposing (DragRecord, Msg(..))
 
 
 type alias Model =
-    { cards : Dict Id Card
+    { cards : List Card
     , draggingCard : Maybe Card
     }
 
@@ -66,7 +64,7 @@ update msg model =
 
         MouseMove moveRecord ->
             ( { model
-                | cards = Dict.map (cardPosition moveRecord) model.cards
+                | cards = List.map (cardPosition moveRecord) model.cards
                 , draggingCard =
                     Maybe.map2
                         (\_ newMoving -> newMoving)
@@ -81,8 +79,8 @@ update msg model =
             )
 
 
-cardPosition : DragRecord -> Id -> Card -> Card
-cardPosition { startId, current } _ previous =
+cardPosition : DragRecord -> Card -> Card
+cardPosition { startId, current } previous =
     let
         newLocation =
             if previous.id == startId then
@@ -108,8 +106,6 @@ view model =
     let
         cardList =
             model.cards
-                |> Dict.toList
-                |> List.map Tuple.second
 
         cardsAsAttributes =
             List.map (Card.view model.draggingCard) (tableCards cardList)
