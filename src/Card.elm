@@ -1,7 +1,7 @@
 module Card exposing (..)
 
 import AssocList as Dict exposing (Dict)
-import Element exposing (Element, el, height, moveDown, moveRight, none, px, rgb, text, width)
+import Element exposing (Element, centerX, centerY, el, height, inFront, moveDown, moveRight, none, px, rgb, text, width)
 import Element.Background exposing (color)
 import Element.Border as Border exposing (shadow)
 import Id exposing (Id)
@@ -12,6 +12,13 @@ import Msg exposing (Msg(..))
 
 cardSize =
     200
+
+
+mouseGrabPoint coords =
+    { coords
+        | x = coords.x - (cardSize // 2)
+        , y = coords.y - (cardSize * 3 // 4)
+    }
 
 
 initCards : Int -> Dict Id Card
@@ -61,8 +68,13 @@ cardStyles startDragCard card =
 
                 InHand ->
                     []
+
+        showId =
+            text (Id.show card.id)
+                |> el [ centerX, centerY ]
+                |> inFront
     in
-    [ height (px cardSize), width (px cardSize), Border.rounded 15 ]
+    [ height (px cardSize), width (px cardSize), Border.rounded 15, showId ]
         ++ moveAttribute
         ++ (if isDragging then
                 [ color (rgb 0.8 0.8 0.4)

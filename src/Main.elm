@@ -81,29 +81,17 @@ update msg model =
             )
 
 
-{-| this won't work... Right now all the cards rely on starting at the origin, and I'm not sure how to
-get the appropriate offset from the origin when cards are coming from their hand.
-we need to act differently when transitioning hand cards onto the table.
-mouse coordinates into pageCoordinates is just the mouse position listener we have
--}
 cardPosition : DragRecord -> Id -> Card -> Card
-cardPosition { startId, startCoords, current } id previous =
+cardPosition { startId, current } id previous =
     if id == startId then
         mapLocation
             (\location ->
                 case location of
-                    --could probably dry these up
-                    Table previousLocation ->
-                        Table
-                            { x = previousLocation.x + (current.x - startCoords.x)
-                            , y = previousLocation.y + (current.y - startCoords.y)
-                            }
+                    Table _ ->
+                        Table (Card.mouseGrabPoint current)
 
                     InHand ->
-                        Table
-                            { x = current.x - startCoords.x
-                            , y = current.y - startCoords.y
-                            }
+                        Table (Card.mouseGrabPoint current)
             )
             previous
 
@@ -169,13 +157,6 @@ subscriptions model =
         f c coords =
             MouseMove
                 { startId = c.id
-                , startCoords =
-                    case c.location of
-                        Table tableCoords ->
-                            tableCoords
-
-                        InHand ->
-                            { x = 0, y = 0 }
                 , current = coords
                 }
     in

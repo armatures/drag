@@ -1,4 +1,6 @@
-module Id exposing (Id, new)
+module Id exposing (Id, new, show)
+
+import String exposing (fromInt)
 
 
 type Id
@@ -8,3 +10,7 @@ type Id
 new : Int -> Id
 new i =
     Id i
+
+
+show (Id i) =
+    fromInt i

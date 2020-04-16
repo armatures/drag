@@ -13,4 +13,4 @@ type Msg
 
 
 type alias DragRecord =
-    { startId : Id, startCoords : Coords, current : Coords }
+    { startId : Id, current : Coords }
