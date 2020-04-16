@@ -82,21 +82,21 @@ update msg model =
 
 
 cardPosition : DragRecord -> Id -> Card -> Card
-cardPosition { startId, current } id previous =
-    if id == startId then
-        mapLocation
-            (\location ->
-                case location of
+cardPosition { startId, current } _ previous =
+    let
+        newLocation =
+            if previous.id == startId then
+                case previous.location of
                     Table _ ->
                         Table (Card.mouseGrabPoint current)
 
                     InHand ->
                         Table (Card.mouseGrabPoint current)
-            )
-            previous
 
-    else
-        previous
+            else
+                previous.location
+    in
+    { previous | location = newLocation }
 
 
 
