@@ -2,8 +2,9 @@ module Hand exposing (..)
 
 import Card
 import Element exposing (Attribute, Element, alignBottom, centerX, el, rotate, row)
+import Element.Events exposing (onMouseUp)
 import Model exposing (Card)
-import Msg exposing (Msg)
+import Msg exposing (Msg(..))
 
 
 type Hand
@@ -30,7 +31,7 @@ view draggingCard (Hand hand) =
             else
                 el [ cardAngle i (List.length hand) ]
     in
-    el [ alignBottom, centerX ] <|
+    el [ alignBottom, centerX, onMouseUp MouseUpOnHand ] <|
         row [] <|
             List.indexedMap (\i c -> rotateCard i c <| Card.view draggingCard c) hand
 

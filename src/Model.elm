@@ -49,3 +49,7 @@ mapLocation f card =
 
 mapCoords f card =
     { card | coords = f card.coords }
+
+
+mapCards f model =
+    { model | cards = f model.cards }

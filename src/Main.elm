@@ -7,8 +7,9 @@ import Element exposing (Element, centerY, fill, height, inFront, none, padding,
 import Element.Background exposing (color)
 import Hand
 import Html exposing (Html)
+import Id exposing (Id)
 import Json.Decode exposing (succeed)
-import Model exposing (Card, Location(..), cardsInHand, mapLocation, tableCards)
+import Model exposing (Card, Location(..), cardsInHand, mapCards, mapLocation, tableCards)
 import Mouse exposing (Coords, subMouseMoveCoords)
 import Msg exposing (DragRecord, Msg(..))
 
@@ -77,6 +78,28 @@ update msg model =
               }
             , Cmd.none
             )
+
+        MouseUpOnHand ->
+            case model.draggingCard of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just dragging ->
+                    ( mapCards (mapCardWithId dragging.id (mapLocation (always InHand))) model
+                    , Cmd.none
+                    )
+
+
+mapCardWithId : Id -> (Card -> Card) -> List Card -> List Card
+mapCardWithId id f =
+    List.map
+        (\card ->
+            if card.id == id then
+                f card
+
+            else
+                card
+        )
 
 
 cardPosition : DragRecord -> Card -> Card
