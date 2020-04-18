@@ -106,7 +106,7 @@ mapCardWithId id f =
 cardPosition : DragRecord -> Card -> Card
 cardPosition { startId, current } previous =
     if previous.id == startId then
-        { previous | location = Table (Card.mouseGrabPoint current) }
+        mapLocation (always <| Table (Card.mouseGrabPoint current)) previous
 
     else
         previous
@@ -122,7 +122,7 @@ view model =
         cardList =
             model.cards
 
-        cardsAsAttributes =
+        tableCardsAsAttributes =
             List.map (Card.view model.draggingCard) (tableCards cardList)
                 |> List.map inFront
     in
@@ -131,7 +131,7 @@ view model =
          , height fill
          , inFront helloBanner
          ]
-            ++ cardsAsAttributes
+            ++ tableCardsAsAttributes
             ++ [ inFront
                     (Hand.view model.draggingCard
                         (Hand.fromList (cardsInHand cardList))
