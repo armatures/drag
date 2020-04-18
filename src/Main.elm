@@ -105,15 +105,11 @@ mapCardWithId id f =
 
 cardPosition : DragRecord -> Card -> Card
 cardPosition { startId, current } previous =
-    let
-        newLocation =
-            if previous.id == startId then
-                Table (Card.mouseGrabPoint current)
+    if previous.id == startId then
+        { previous | location = Table (Card.mouseGrabPoint current) }
 
-            else
-                previous.location
-    in
-    { previous | location = newLocation }
+    else
+        previous
 
 
 
