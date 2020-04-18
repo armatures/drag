@@ -9,7 +9,8 @@ import Hand
 import Html exposing (Html)
 import Id exposing (Id)
 import Json.Decode exposing (succeed)
-import Model exposing (Card, Location(..), cardsInHand, mapCards, mapLocation, tableCards)
+import Location exposing (Location(..))
+import Model exposing (Card, cardsInHand, mapCards, mapLocation, tableCards)
 import Mouse exposing (Coords, subMouseMoveCoords)
 import Msg exposing (DragRecord, Msg(..))
 

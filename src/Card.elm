@@ -4,7 +4,8 @@ import Element exposing (Element, centerX, centerY, el, height, inFront, moveDow
 import Element.Background exposing (color)
 import Element.Border as Border exposing (shadow)
 import Id exposing (Id)
-import Model exposing (Card, Location(..))
+import Location exposing (Location(..))
+import Model exposing (Card)
 import Mouse exposing (Coords, initCoords, onMouseDownCoords)
 import Msg exposing (Msg(..))
 

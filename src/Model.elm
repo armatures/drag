@@ -1,16 +1,11 @@
 module Model exposing (..)
 
 import Id exposing (Id)
-import Mouse exposing (Coords)
+import Location exposing (Location(..))
 
 
 type alias Card =
     { id : Id, location : Location }
-
-
-type Location
-    = Table Coords
-    | InHand
 
 
 cardsInHand : List Card -> List Card
