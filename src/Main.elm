@@ -108,12 +108,7 @@ cardPosition { startId, current } previous =
     let
         newLocation =
             if previous.id == startId then
-                case previous.location of
-                    Table _ ->
-                        Table (Card.mouseGrabPoint current)
-
-                    InHand ->
-                        Table (Card.mouseGrabPoint current)
+                Table (Card.mouseGrabPoint current)
 
             else
                 previous.location
