@@ -8,7 +8,7 @@ import Mouse exposing (Coords)
 type Msg
     = NoOp
     | MouseUp
-    | MouseDown Card
+    | MouseDown Card Coords
     | MouseMove DragRecord
     | MouseUpOnHand
 

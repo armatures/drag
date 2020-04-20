@@ -2,15 +2,16 @@ module Main exposing (..)
 
 import Browser
 import Browser.Events exposing (onMouseUp)
-import Card exposing (cardSize, initCards)
-import Element exposing (Element, centerY, fill, height, inFront, none, padding, rgb, width)
+import Card exposing (cardSize)
+import Element exposing (Element, alignBottom, centerX, centerY, el, fill, height, inFront, moveDown, moveRight, none, padding, rgb, row, width)
 import Element.Background exposing (color)
+import Element.Events
 import Hand
 import Html exposing (Html)
 import Id exposing (Id)
 import Json.Decode exposing (succeed)
-import Location exposing (Location(..))
-import Model exposing (Card, cardsInHand, mapCards, mapLocation, tableCards)
+import Location exposing (Location(..), LocationStore, initLocationStore, keys, mapLocation)
+import Model exposing (Card, Model, mapLocationStore)
 import Mouse exposing (Coords, subMouseMoveCoords)
 import Msg exposing (DragRecord, Msg(..))
 
@@ -19,16 +20,15 @@ import Msg exposing (DragRecord, Msg(..))
 ---- MODEL ----
 
 
-type alias Model =
-    { cards : List Card
-    , draggingCard : Maybe Card
-    }
-
-
 init : ( Model, Cmd Msg )
 init =
-    ( { cards = initCards 4
+    let
+        locationStore =
+            initLocationStore 4
+    in
+    ( { cards = keys locationStore |> List.map Card
       , draggingCard = Nothing
+      , locationStore = locationStore
       }
     , Cmd.none
     )
@@ -44,19 +44,17 @@ update msg model =
         NoOp ->
             ( model, Cmd.none )
 
-        MouseDown card ->
+        MouseDown card _ ->
             ( { model
                 | draggingCard =
                     Just
-                        (mapLocation
-                            (always <|
-                                Table
-                                    { x = cardSize // 2
-                                    , y = cardSize // 2
-                                    }
-                            )
-                            card
-                        )
+                        { id = card.id
+                        , location =
+                            Table
+                                { x = cardSize // 2
+                                , y = cardSize // 2
+                                }
+                        }
               }
             , Cmd.none
             )
@@ -65,18 +63,25 @@ update msg model =
             ( { model | draggingCard = Nothing }, Cmd.none )
 
         MouseMove moveRecord ->
-            ( { model
-                | cards = List.map (cardPosition moveRecord) model.cards
-                , draggingCard =
-                    Maybe.map2
-                        (\_ newMoving -> newMoving)
-                        --don't move if the mouse has already been released (events arrive unordered)
-                        model.draggingCard
-                        (Just moveRecord.current)
-                        |> Maybe.map (Card moveRecord.startId << Table)
+            let
+                newDraggingCard =
+                    case model.draggingCard of
+                        Nothing ->
+                            Nothing
 
-                -- the "current" field doesn't have the id, but these must refer to the same record.
+                        Just _ ->
+                            Just
+                                { id = moveRecord.startId
+                                , location = Table <| Card.mouseGrabPoint moveRecord.current
+                                }
+            in
+            ( { model
+                | draggingCard = newDraggingCard
               }
+                |> mapLocationStore
+                    (mapLocation moveRecord.startId
+                        (always (newDraggingCard |> Maybe.map .location))
+                    )
             , Cmd.none
             )
 
@@ -86,7 +91,7 @@ update msg model =
                     ( model, Cmd.none )
 
                 Just dragging ->
-                    ( mapCards (mapCardWithId dragging.id (mapLocation (always InHand))) model
+                    ( mapLocationStore (mapLocation dragging.id (always (Just InHand))) model
                     , Cmd.none
                     )
 
@@ -103,15 +108,6 @@ mapCardWithId id f =
         )
 
 
-cardPosition : DragRecord -> Card -> Card
-cardPosition { startId, current } previous =
-    if previous.id == startId then
-        mapLocation (always <| Table (Card.mouseGrabPoint current)) previous
-
-    else
-        previous
-
-
 
 ---- VIEW ----
 
@@ -122,15 +118,27 @@ view model =
         cardList =
             model.cards
 
+        viewTableCards : List (Element Msg)
         viewTableCards =
-            List.map (Card.view model.draggingCard) (tableCards cardList)
+            Location.tableCards cardList model.locationStore
+                |> List.map showTableCard
 
-        viewHandCards =
-            [ Hand.view model.draggingCard (cardsInHand cardList)
-            ]
+        draggingCardId =
+            Maybe.map .id model.draggingCard
+
+        showTableCard : ( Card, Coords ) -> Element Msg
+        showTableCard ( card, { x, y } ) =
+            Card.view draggingCardId card [ moveRight (toFloat x), moveDown (toFloat y) ]
+
+        viewHandCards : List Card -> Element Msg
+        viewHandCards ids =
+            el [ alignBottom, centerX, Element.Events.onMouseUp MouseUpOnHand ] <|
+                row [] <|
+                    List.indexedMap (Hand.view draggingCardId (List.length ids)) ids
 
         cardsAsAttributes =
-            List.map inFront (viewTableCards ++ viewHandCards)
+            List.map inFront
+                (viewTableCards ++ [ viewHandCards (Location.handCards cardList model.locationStore) ])
     in
     Element.layout
         ([ width fill
@@ -165,7 +173,7 @@ main =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     let
-        f : Card -> Coords -> Msg
+        f : { a | id : Id } -> Coords -> Msg
         f c coords =
             MouseMove
                 { startId = c.id

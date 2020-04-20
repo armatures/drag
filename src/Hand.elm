@@ -1,31 +1,29 @@
 module Hand exposing (..)
 
 import Card
-import Element exposing (Attribute, Element, alignBottom, centerX, el, rotate, row)
-import Element.Events exposing (onMouseUp)
+import Element exposing (Attribute, Element, rotate)
+import Id exposing (Id)
 import Model exposing (Card)
 import Msg exposing (Msg(..))
 
 
-view : Maybe Card -> List Card -> Element Msg
-view draggingCard hand =
+view : Maybe Id -> Int -> Int -> Card -> Element Msg
+view draggingCard handSize index card =
     let
         rotateCard i c =
             if isDragging draggingCard c then
-                identity
+                []
 
             else
-                el [ cardAngle i (List.length hand) ]
+                [ cardAngle i handSize ]
     in
-    el [ alignBottom, centerX, onMouseUp MouseUpOnHand ] <|
-        row [] <|
-            List.indexedMap (\i c -> rotateCard i c <| Card.view draggingCard c) hand
+    Card.view draggingCard card (rotateCard index card)
 
 
 isDragging draggingCard card =
     case draggingCard of
-        Just c ->
-            card.id == c.id
+        Just id ->
+            card.id == id
 
         Nothing ->
             False
