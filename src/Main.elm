@@ -122,21 +122,22 @@ view model =
         cardList =
             model.cards
 
-        tableCardsAsAttributes =
+        viewTableCards =
             List.map (Card.view model.draggingCard) (tableCards cardList)
-                |> List.map inFront
+
+        viewHandCards =
+            [ Hand.view model.draggingCard (cardsInHand cardList)
+            ]
+
+        cardsAsAttributes =
+            List.map inFront (viewTableCards ++ viewHandCards)
     in
     Element.layout
         ([ width fill
          , height fill
          , inFront helloBanner
          ]
-            ++ tableCardsAsAttributes
-            ++ [ inFront
-                    (Hand.view model.draggingCard
-                        (Hand.fromList (cardsInHand cardList))
-                    )
-               ]
+            ++ cardsAsAttributes
         )
         none
 

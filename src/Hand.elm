@@ -7,22 +7,8 @@ import Model exposing (Card)
 import Msg exposing (Msg(..))
 
 
-type Hand
-    = Hand (List Card)
-
-
-fromList : List Card -> Hand
-fromList =
-    Hand
-
-
-draw : Card -> Hand -> Hand
-draw card (Hand hand) =
-    Hand (card :: hand)
-
-
-view : Maybe Card -> Hand -> Element Msg
-view draggingCard (Hand hand) =
+view : Maybe Card -> List Card -> Element Msg
+view draggingCard hand =
     let
         rotateCard i c =
             if isDragging draggingCard c then
