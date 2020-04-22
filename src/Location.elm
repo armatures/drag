@@ -1,6 +1,6 @@
 module Location exposing (..)
 
-import AssocList as Dict exposing (Dict, get)
+import AssocList as Dict exposing (Dict, get, map)
 import Id exposing (Id)
 import Mouse exposing (Coords, initCoords)
 
@@ -36,6 +36,11 @@ initLocationStore count =
 keys : LocationStore -> List Id
 keys (LocationStore locationStore) =
     Dict.keys locationStore
+
+
+values : LocationStore -> List Location
+values (LocationStore locationStore) =
+    Dict.values locationStore
 
 
 mapLocation : Id -> (Maybe Location -> Maybe Location) -> LocationStore -> LocationStore
@@ -88,3 +93,8 @@ handCards cards locationStore =
                     Just ( card, i )
         )
         cards
+
+
+placeCard : Id -> Location -> LocationStore -> LocationStore
+placeCard id destination =
+    mapLocation id (always (Just destination))

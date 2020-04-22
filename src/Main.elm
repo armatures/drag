@@ -11,7 +11,7 @@ import Hand
 import Html exposing (Html)
 import Id exposing (Id)
 import Json.Decode exposing (succeed)
-import Location exposing (HandPosition, Location(..), LocationStore, initLocationStore, keys, mapLocation)
+import Location exposing (HandPosition, Location(..), LocationStore, initLocationStore, keys, mapLocation, placeCard)
 import Model exposing (Card, Model, mapLocationStore)
 import Mouse exposing (Coords, subMouseMoveCoords)
 import Msg exposing (DragRecord, Msg(..))
@@ -92,7 +92,7 @@ update msg model =
                     ( model, Cmd.none )
 
                 Just dragging ->
-                    ( mapLocationStore (mapLocation dragging.id (always (Just (InHand index)))) model
+                    ( mapLocationStore (placeCard dragging.id (InHand index)) model
                     , Cmd.none
                     )
 
