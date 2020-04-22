@@ -44,14 +44,24 @@ all =
                         |> Expect.equal (Just tableLocation)
             , test "does not duplicate hand positions, to make ordering easily maintainable" <|
                 \_ ->
-                    initLocationStore 2
+                    initLocationStore 4
                         |> placeCard (Id.new 1) (InHand 0)
                         |> placeCard (Id.new 2) (InHand 0)
+                        |> placeCard (Id.new 3) (InHand 0)
+                        |> placeCard (Id.new 4) (InHand 0)
                         |> toList_test
                         |> Expect.equal
-                            [ ( 1, InHand 1 )
-                            , ( 2, InHand 0 )
-                            ]
+                            [ ( 1, InHand 3 ), ( 2, InHand 2 ), ( 3, InHand 1 ), ( 4, InHand 0 ) ]
+            , test "allows inserting into the middle of a hand, incrementing the later cards' indices" <|
+                \_ ->
+                    initLocationStore 4
+                        |> placeCard (Id.new 1) (InHand 0)
+                        |> placeCard (Id.new 2) (InHand 1)
+                        |> placeCard (Id.new 3) (InHand 2)
+                        |> placeCard (Id.new 4) (InHand 1)
+                        |> toList_test
+                        |> Expect.equal
+                            [ ( 1, InHand 0 ), ( 2, InHand 2 ), ( 3, InHand 3 ), ( 4, InHand 1 ) ]
             , test "can duplicate table coords" <|
                 \_ ->
                     initLocationStore 2
