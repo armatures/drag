@@ -9,8 +9,7 @@ type alias Card =
 
 
 type alias Model =
-    { cards : List Card
-    , draggingCard : Maybe { id : Id, location : Location }
+    { draggingCard : Maybe { id : Id, location : Location }
     , locationStore : LocationStore
     }
 

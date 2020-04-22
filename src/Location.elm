@@ -61,38 +61,32 @@ type alias HandPosition =
     Int
 
 
-tableCards : List { card | id : Id } -> LocationStore -> List ( { card | id : Id }, Coords )
-tableCards cards locationStore =
+tableCards : LocationStore -> List ( Id, Coords )
+tableCards (LocationStore locationStore) =
     List.filterMap
-        (\card ->
-            case cardLocation card.id locationStore of
-                Nothing ->
-                    Nothing
+        (\( id, location ) ->
+            case location of
+                Table coords ->
+                    Just ( id, coords )
 
-                Just (Table coords) ->
-                    Just ( card, coords )
-
-                Just (InHand _) ->
+                InHand _ ->
                     Nothing
         )
-        cards
+        (Dict.toList locationStore)
 
 
-handCards : List { card | id : Id } -> LocationStore -> List ( { card | id : Id }, HandPosition )
-handCards cards locationStore =
+handCards : LocationStore -> List ( Id, HandPosition )
+handCards (LocationStore locationStore) =
     List.filterMap
-        (\card ->
-            case cardLocation card.id locationStore of
-                Nothing ->
+        (\( id, location ) ->
+            case location of
+                Table _ ->
                     Nothing
 
-                Just (Table _) ->
-                    Nothing
-
-                Just (InHand i) ->
-                    Just ( card, i )
+                InHand i ->
+                    Just ( id, i )
         )
-        cards
+        (Dict.toList locationStore)
 
 
 placeCard : Id -> Location -> LocationStore -> LocationStore

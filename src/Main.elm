@@ -6,7 +6,6 @@ import Card exposing (cardSize)
 import Colors exposing (colors)
 import Element exposing (Element, alignBottom, centerX, centerY, el, fill, height, inFront, moveDown, moveRight, none, padding, row, width)
 import Element.Background exposing (color)
-import Element.Events
 import Hand
 import Html exposing (Html)
 import Id exposing (Id)
@@ -27,8 +26,7 @@ init =
         locationStore =
             initLocationStore 4
     in
-    ( { cards = keys locationStore |> List.map Card
-      , draggingCard = Nothing
+    ( { draggingCard = Nothing
       , locationStore = locationStore
       }
     , Cmd.none
@@ -116,12 +114,10 @@ mapCardWithId id f =
 view : Model -> Html Msg
 view model =
     let
-        cardList =
-            model.cards
-
         viewTableCards : List (Element Msg)
         viewTableCards =
-            Location.tableCards cardList model.locationStore
+            Location.tableCards model.locationStore
+                |> List.map (Tuple.mapFirst Card)
                 |> List.map showTableCard
 
         draggingCardId =
@@ -143,7 +139,12 @@ view model =
 
         cardsAsAttributes =
             List.map inFront
-                (viewTableCards ++ [ viewHandCards (Location.handCards cardList model.locationStore) ])
+                (viewTableCards
+                    ++ [ viewHandCards <|
+                            List.map (Tuple.mapFirst Card)
+                                (Location.handCards model.locationStore)
+                       ]
+                )
     in
     Element.layout
         ([ width fill
