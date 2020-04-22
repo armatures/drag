@@ -1,13 +1,20 @@
-module Location exposing (HandPosition, Location(..), LocationStore, cardLocation, handCards, initLocationStore, keys, mapLocation, placeCard, tableCards, values)
+module Location exposing (HandPosition, Location(..), LocationStore, cardLocation, handCards, initLocationStore, keys, mapLocation, placeCard, tableCards, toList_test, values)
 
 import AssocList as Dict exposing (Dict, get)
-import Id exposing (Id)
+import Id exposing (Id, toInt_test)
 import Mouse exposing (Coords, initCoords)
 
 
 cardLocation : Id -> LocationStore -> Maybe Location
 cardLocation cardId (LocationStore locations) =
     get cardId locations
+
+
+toList_test : LocationStore -> List ( Int, Location )
+toList_test (LocationStore locationStore) =
+    Dict.toList locationStore
+        |> List.map (Tuple.mapFirst toInt_test)
+        |> List.sortBy Tuple.first
 
 
 initLocationStore : Int -> LocationStore

@@ -2,7 +2,7 @@ module Tests exposing (..)
 
 import Expect
 import Id
-import Location exposing (Location(..), LocationStore(..), cardLocation, initLocationStore, keys, placeCard, values)
+import Location exposing (Location(..), LocationStore(..), cardLocation, initLocationStore, keys, placeCard, toList_test, values)
 import Test exposing (..)
 
 
@@ -47,8 +47,11 @@ all =
                     initLocationStore 2
                         |> placeCard (Id.new 1) (InHand 0)
                         |> placeCard (Id.new 2) (InHand 0)
-                        |> values
-                        |> Expect.equal [ InHand 0, InHand 1 ]
+                        |> toList_test
+                        |> Expect.equal
+                            [ ( 1, InHand 1 )
+                            , ( 2, InHand 0 )
+                            ]
             , test "can duplicate table coords" <|
                 \_ ->
                     initLocationStore 2

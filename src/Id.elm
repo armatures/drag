@@ -1,4 +1,4 @@
-module Id exposing (Id, new, show)
+module Id exposing (Id, new, show, toInt_test)
 
 import String exposing (fromInt)
 
@@ -14,3 +14,8 @@ new i =
 
 show (Id i) =
     fromInt i
+
+
+toInt_test : Id -> Int
+toInt_test (Id id) =
+    id
