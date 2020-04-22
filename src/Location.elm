@@ -1,6 +1,6 @@
-module Location exposing (..)
+module Location exposing (HandPosition, Location(..), LocationStore, cardLocation, handCards, initLocationStore, keys, mapLocation, placeCard, tableCards, values)
 
-import AssocList as Dict exposing (Dict, get, map)
+import AssocList as Dict exposing (Dict, get)
 import Id exposing (Id)
 import Mouse exposing (Coords, initCoords)
 
