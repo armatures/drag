@@ -3,7 +3,8 @@ module Main exposing (..)
 import Browser
 import Browser.Events exposing (onMouseUp)
 import Card exposing (cardSize)
-import Element exposing (Element, alignBottom, centerX, centerY, el, fill, height, inFront, moveDown, moveRight, none, padding, rgb, row, width)
+import Colors exposing (colors)
+import Element exposing (Element, alignBottom, centerX, centerY, el, fill, height, inFront, moveDown, moveRight, none, padding, row, width)
 import Element.Background exposing (color)
 import Element.Events
 import Hand
@@ -143,6 +144,7 @@ view model =
     Element.layout
         ([ width fill
          , height fill
+         , color colors.background
          , inFront helloBanner
          ]
             ++ cardsAsAttributes
@@ -152,8 +154,8 @@ view model =
 
 helloBanner =
     Element.el
-        [ width fill, centerY, color (rgb 0.8 0.4 0.4), padding 30 ]
-        (Element.text "hello from elm-ui")
+        [ width fill, centerY, color colors.accent, padding 30 ]
+        (Element.text "drag some cards!")
 
 
 

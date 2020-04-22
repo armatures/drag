@@ -77,7 +77,7 @@ handCards cards locationStore =
                 Nothing ->
                     Nothing
 
-                Just (Table coords) ->
+                Just (Table _) ->
                     Nothing
 
                 Just InHand ->
