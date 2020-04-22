@@ -58,10 +58,11 @@ all =
                         |> placeCard (Id.new 1) (InHand 0)
                         |> placeCard (Id.new 2) (InHand 1)
                         |> placeCard (Id.new 3) (InHand 2)
-                        |> placeCard (Id.new 4) (InHand 1)
+                        |> placeCard (Id.new 4) (InHand 3)
+                        |> placeCard (Id.new 3) (InHand 1)
                         |> toList_test
                         |> Expect.equal
-                            [ ( 1, InHand 0 ), ( 2, InHand 2 ), ( 3, InHand 3 ), ( 4, InHand 1 ) ]
+                            [ ( 1, InHand 0 ), ( 2, InHand 2 ), ( 3, InHand 1 ), ( 4, InHand 3 ) ]
             , test "can duplicate table coords" <|
                 \_ ->
                     initLocationStore 2

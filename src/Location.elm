@@ -1,62 +1,109 @@
-module Location exposing (HandPosition, Location(..), LocationStore, cardLocation, handCards, initLocationStore, keys, mapLocation, placeCard, tableCards, toList_test, values)
+module Location exposing (HandPosition, Location(..), LocationStore, cardLocation, handCards, initLocationStore, keys, placeCard, setLocation, tableCards, toList_test, values)
 
-import AssocList as Dict exposing (Dict, get)
-import Id exposing (Id, toInt_test)
+import Id exposing (Id, show, toInt_test)
+import List exposing (filterMap)
+import List.Extra
 import Mouse exposing (Coords, initCoords)
 
 
+findHandCard : Id -> LocationStore -> Maybe Location
+findHandCard cardId (LocationStore locations) =
+    List.Extra.findIndex ((==) cardId) locations.hand
+        |> Maybe.map InHand
+
+
+findTableCard : Id -> LocationStore -> Maybe Location
+findTableCard cardId (LocationStore locations) =
+    List.Extra.find (Tuple.first >> (==) cardId) locations.table
+        |> Maybe.map (Tuple.second >> Table)
+
+
 cardLocation : Id -> LocationStore -> Maybe Location
-cardLocation cardId (LocationStore locations) =
-    get cardId locations
+cardLocation cardId locations =
+    filterMap identity
+        [ findHandCard cardId locations
+        , findTableCard cardId locations
+        ]
+        |> List.head
 
 
 toList_test : LocationStore -> List ( Int, Location )
-toList_test (LocationStore locationStore) =
-    Dict.toList locationStore
-        |> List.map (Tuple.mapFirst toInt_test)
-        |> List.sortBy Tuple.first
+toList_test =
+    toList
+        >> List.map (Tuple.mapFirst toInt_test)
+        >> List.sortBy Tuple.first
 
 
 initLocationStore : Int -> LocationStore
 initLocationStore count =
-    let
-        ids =
-            List.range 1 count
-                |> List.map Id.new
+    List.range 1 count
+        |> List.foldr
+            (\i acc ->
+                if modBy 2 i == 0 then
+                    mapTable ((::) ( Id.new i, initCoords )) acc
 
-        locations =
-            List.range 1 count
-                |> List.map
-                    (\i ->
-                        if modBy 2 i == 0 then
-                            Table initCoords
+                else
+                    mapHand ((::) (Id.new i)) acc
+            )
+            (LocationStore { table = [], hand = [] })
 
-                        else
-                            InHand ((i - 1) // 2)
-                    )
-    in
-    List.map2 Tuple.pair ids locations
-        |> Dict.fromList
-        |> LocationStore
+
+mapTable : (Table -> Table) -> LocationStore -> LocationStore
+mapTable f l =
+    mapContents (\locationStore -> { locationStore | table = f locationStore.table }) l
+
+
+mapHand : (List Id -> List Id) -> LocationStore -> LocationStore
+mapHand f l =
+    mapContents (\locationStore -> { locationStore | hand = f locationStore.hand }) l
 
 
 keys : LocationStore -> List Id
 keys (LocationStore locationStore) =
-    Dict.keys locationStore
+    locationStore.table
+        |> List.map Tuple.first
+        |> (++) locationStore.hand
+        |> List.sortBy show
+
+
+toList : LocationStore -> List ( Id, Location )
+toList locationStore =
+    (handCards locationStore |> List.map (Tuple.mapSecond InHand))
+        ++ (tableCards locationStore |> List.map (Tuple.mapSecond Table))
 
 
 values : LocationStore -> List Location
-values (LocationStore locationStore) =
-    Dict.values locationStore
+values =
+    toList >> List.map Tuple.second
 
 
-mapLocation : Id -> (Maybe Location -> Maybe Location) -> LocationStore -> LocationStore
-mapLocation id f =
-    mapDict (Dict.update id f)
+insertAtIndex : Int -> b -> List b -> List b
+insertAtIndex i item list =
+    List.Extra.splitAt i list
+        |> (\( front, back ) -> List.concat [ front, [ item ], back ])
+
+
+setLocation : Id -> Location -> LocationStore -> LocationStore
+setLocation id location =
+    mapTable (List.filter (Tuple.first >> (/=) id))
+        >> mapHand (List.filter ((/=) id))
+        >> (case location of
+                InHand i ->
+                    mapHand (insertAtIndex i id)
+
+                Table c ->
+                    mapTable ((::) ( id, c ))
+           )
 
 
 type LocationStore
-    = LocationStore (Dict Id Location)
+    = LocationStore LocationStoreRecord
+
+
+type alias LocationStoreRecord =
+    { hand : List Id
+    , table : List ( Id, Coords )
+    }
 
 
 type Location
@@ -68,64 +115,30 @@ type alias HandPosition =
     Int
 
 
-tableCards : LocationStore -> List ( Id, Coords )
+type alias Table =
+    List ( Id, Coords )
+
+
+type alias Hand =
+    List ( Id, HandPosition )
+
+
+tableCards : LocationStore -> Table
 tableCards (LocationStore locationStore) =
-    Dict.toList locationStore
-        |> List.filterMap
-            (\( id, location ) ->
-                case location of
-                    Table coords ->
-                        Just ( id, coords )
-
-                    InHand _ ->
-                        Nothing
-            )
+    locationStore.table
 
 
-handCards : LocationStore -> List ( Id, HandPosition )
+handCards : LocationStore -> Hand
 handCards (LocationStore locationStore) =
-    Dict.toList locationStore
-        |> List.filterMap
-            (\( id, location ) ->
-                case location of
-                    Table _ ->
-                        Nothing
-
-                    InHand i ->
-                        Just ( id, i )
-            )
-        |> List.sortBy Tuple.second
+    locationStore.hand
+        |> List.indexedMap (\i id -> ( id, i ))
 
 
-mapDict : (Dict Id Location -> Dict Id Location) -> LocationStore -> LocationStore
-mapDict f (LocationStore locationStore) =
+mapContents : (LocationStoreRecord -> LocationStoreRecord) -> LocationStore -> LocationStore
+mapContents f (LocationStore locationStore) =
     LocationStore (f locationStore)
 
 
 placeCard : Id -> Location -> LocationStore -> LocationStore
-placeCard id destination locationStore =
-    case destination of
-        InHand i ->
-            mapDict
-                (Dict.map
-                    (\id_ loc ->
-                        if id == id_ then
-                            destination
-
-                        else
-                            case loc of
-                                Table _ ->
-                                    loc
-
-                                InHand oldHandIndex ->
-                                    if oldHandIndex >= i then
-                                        InHand (oldHandIndex + 1)
-
-                                    else
-                                        loc
-                    )
-                )
-                locationStore
-
-        Table _ ->
-            mapLocation id (always (Just destination)) locationStore
+placeCard =
+    setLocation
