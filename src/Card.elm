@@ -1,9 +1,10 @@
 module Card exposing (..)
 
 import Colors exposing (colors)
-import Element exposing (Element, centerX, centerY, el, height, inFront, none, px, text, width)
+import Element exposing (Element, centerX, centerY, el, height, htmlAttribute, inFront, none, px, text, width)
 import Element.Background exposing (color)
 import Element.Border as Border exposing (shadow)
+import Html.Attributes as A
 import Id exposing (Id)
 import Model exposing (Card)
 import Mouse exposing (Coords, onMouseDownCoords)
@@ -42,7 +43,7 @@ cardStyles startDragCard card =
                 |> el [ centerX, centerY ]
                 |> inFront
     in
-    [ height (px cardSize), width (px cardSize), Border.rounded 15, showId ]
+    [ height (px cardSize), width (px cardSize), Border.rounded 15, showId, htmlAttribute (A.class "no-select") ]
         ++ (if isDragging then
                 [ color colors.cardBack
                 , shadow { offset = ( 0, 0 ), size = 0.0001, blur = 10, color = colors.shadow }
