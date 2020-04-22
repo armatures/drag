@@ -44,8 +44,8 @@ values (LocationStore locationStore) =
 
 
 mapLocation : Id -> (Maybe Location -> Maybe Location) -> LocationStore -> LocationStore
-mapLocation id f (LocationStore locationStore) =
-    LocationStore <| Dict.update id f locationStore
+mapLocation id f =
+    mapDict (Dict.update id f)
 
 
 type LocationStore
@@ -90,6 +90,35 @@ handCards (LocationStore locationStore) =
         |> List.sortBy Tuple.second
 
 
+mapDict : (Dict Id Location -> Dict Id Location) -> LocationStore -> LocationStore
+mapDict f (LocationStore locationStore) =
+    LocationStore (f locationStore)
+
+
 placeCard : Id -> Location -> LocationStore -> LocationStore
-placeCard id destination =
-    mapLocation id (always (Just destination))
+placeCard id destination locationStore =
+    case destination of
+        InHand i ->
+            mapDict
+                (Dict.map
+                    (\id_ loc ->
+                        if id == id_ then
+                            destination
+
+                        else
+                            case loc of
+                                Table _ ->
+                                    loc
+
+                                InHand oldHandIndex ->
+                                    if oldHandIndex >= i then
+                                        InHand (oldHandIndex + 1)
+
+                                    else
+                                        loc
+                    )
+                )
+                locationStore
+
+        Table _ ->
+            mapLocation id (always (Just destination)) locationStore

@@ -42,7 +42,13 @@ all =
                     placeCard firstId tableLocation testLocationStore
                         |> cardLocation firstId
                         |> Expect.equal (Just tableLocation)
-            , todo "does not duplicate hand positions"
+            , test "does not duplicate hand positions, to make ordering easily maintainable" <|
+                \_ ->
+                    initLocationStore 2
+                        |> placeCard (Id.new 1) (InHand 0)
+                        |> placeCard (Id.new 2) (InHand 0)
+                        |> values
+                        |> Expect.equal [ InHand 0, InHand 1 ]
             , test "can duplicate table coords" <|
                 \_ ->
                     initLocationStore 2
