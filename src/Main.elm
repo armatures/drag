@@ -11,7 +11,7 @@ import Hand
 import Html exposing (Html)
 import Id exposing (Id)
 import Json.Decode exposing (succeed)
-import Location exposing (Location(..), LocationStore, initLocationStore, keys, mapLocation)
+import Location exposing (HandPosition, Location(..), LocationStore, initLocationStore, keys, mapLocation)
 import Model exposing (Card, Model, mapLocationStore)
 import Mouse exposing (Coords, subMouseMoveCoords)
 import Msg exposing (DragRecord, Msg(..))
@@ -86,13 +86,13 @@ update msg model =
             , Cmd.none
             )
 
-        MouseUpOnHand ->
+        MouseUpOnHand index ->
             case model.draggingCard of
                 Nothing ->
                     ( model, Cmd.none )
 
                 Just dragging ->
-                    ( mapLocationStore (mapLocation dragging.id (always (Just InHand))) model
+                    ( mapLocationStore (mapLocation dragging.id (always (Just (InHand index)))) model
                     , Cmd.none
                     )
 
@@ -131,11 +131,15 @@ view model =
         showTableCard ( card, { x, y } ) =
             Card.view draggingCardId card [ moveRight (toFloat x), moveDown (toFloat y) ]
 
-        viewHandCards : List Card -> Element Msg
-        viewHandCards ids =
-            el [ alignBottom, centerX, Element.Events.onMouseUp MouseUpOnHand ] <|
+        viewHandCards : List ( Card, HandPosition ) -> Element Msg
+        viewHandCards cards =
+            let
+                sorted =
+                    List.sortBy Tuple.second cards |> List.map Tuple.first
+            in
+            el [ alignBottom, centerX ] <|
                 row [] <|
-                    List.indexedMap (Hand.view draggingCardId (List.length ids)) ids
+                    List.indexedMap (Hand.view draggingCardId (List.length cards)) sorted
 
         cardsAsAttributes =
             List.map inFront

@@ -25,7 +25,7 @@ initLocationStore count =
                             Table initCoords
 
                         else
-                            InHand
+                            InHand ((i - 1) // 2)
                     )
     in
     List.map2 Tuple.pair ids locations
@@ -49,7 +49,11 @@ type LocationStore
 
 type Location
     = Table Coords
-    | InHand
+    | InHand HandPosition
+
+
+type alias HandPosition =
+    Int
 
 
 tableCards : List { card | id : Id } -> LocationStore -> List ( { card | id : Id }, Coords )
@@ -63,13 +67,13 @@ tableCards cards locationStore =
                 Just (Table coords) ->
                     Just ( card, coords )
 
-                Just InHand ->
+                Just (InHand _) ->
                     Nothing
         )
         cards
 
 
-handCards : List { card | id : Id } -> LocationStore -> List { card | id : Id }
+handCards : List { card | id : Id } -> LocationStore -> List ( { card | id : Id }, HandPosition )
 handCards cards locationStore =
     List.filterMap
         (\card ->
@@ -80,7 +84,7 @@ handCards cards locationStore =
                 Just (Table _) ->
                     Nothing
 
-                Just InHand ->
-                    Just card
+                Just (InHand i) ->
+                    Just ( card, i )
         )
         cards

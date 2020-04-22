@@ -10,7 +10,7 @@ type Msg
     | MouseUp
     | MouseDown Card Coords
     | MouseMove DragRecord
-    | MouseUpOnHand
+    | MouseUpOnHand Int
 
 
 type alias DragRecord =

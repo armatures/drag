@@ -2,6 +2,7 @@ module Hand exposing (..)
 
 import Card
 import Element exposing (Attribute, Element, rotate)
+import Element.Events
 import Id exposing (Id)
 import Model exposing (Card)
 import Msg exposing (Msg(..))
@@ -16,8 +17,11 @@ view draggingCard handSize index card =
 
             else
                 [ cardAngle i handSize ]
+
+        styles =
+            rotateCard index card ++ [ Element.Events.onMouseUp (MouseUpOnHand index) ]
     in
-    Card.view draggingCard card (rotateCard index card)
+    Card.view draggingCard card styles
 
 
 isDragging draggingCard card =
